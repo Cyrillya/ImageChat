@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32825.248
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageChat", "ImageChat.csproj", "{BB0C9275-DF91-42AF-B800-D7C12C5D71DF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BB0C9275-DF91-42AF-B800-D7C12C5D71DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB0C9275-DF91-42AF-B800-D7C12C5D71DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB0C9275-DF91-42AF-B800-D7C12C5D71DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB0C9275-DF91-42AF-B800-D7C12C5D71DF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A82F0E99-8B39-4DFE-BA3B-80B1B3541577}
+	EndGlobalSection
+EndGlobal
