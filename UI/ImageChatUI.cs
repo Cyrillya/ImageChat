@@ -52,25 +52,7 @@ public class ImageChatUI : UIState
 
                 if (tex is null) return;
 
-                var config = ImageChat.Config;
-                if (tex.Width > config.MaximumWidth || tex.Height > config.MaximumHeight) {
-                    MessageBox.Show(
-                        Language.GetTextValue("Mods.ImageChat.Common.ImageTooLarge", config.MaximumWidth,
-                            config.MaximumHeight), Language.GetTextValue("Mods.ImageChat.Common.Warn"));
-                    return;
-                }
-
-                // 设置冷却
-                BasicsSystem.SendDelay = config.SendCap;
-
-                // 发送图片
-                Main.NewText($"<{Main.LocalPlayer.name}>");
-                RemadeChatMonitorHooks.SendTexture(tex, path);
-
-                // 多人发包
-                if (Main.netMode is NetmodeID.MultiplayerClient) {
-                    ImageChat.Instance.SendImagePacket(tex);
-                }
+                ImageChat.LocalSendImage(tex, path);
             }
         };
         imageButton.OnUpdate += element => {

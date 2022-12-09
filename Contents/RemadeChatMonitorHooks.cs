@@ -1,13 +1,14 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Terraria;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Terraria.GameContent;
 using Terraria.GameContent.UI.Chat;
 using Terraria.ModLoader;
 using Terraria.UI.Chat;
+using Keys = Microsoft.Xna.Framework.Input.Keys;
 using OnChat = On.Terraria.GameContent.UI.Chat.RemadeChatMonitor;
 
 namespace ImageChat.Contents;
@@ -17,7 +18,7 @@ public class RemadeChatMonitorHooks : ModSystem
     private static Dictionary<string, FieldInfo> _fields;
     private static Dictionary<string, FieldInfo> _msgContainerFields;
 
-    private void HookDrawChat(OnChat.orig_DrawChat orig, RemadeChatMonitor self, bool drawingPlayerChat) {
+    private static void HookDrawChat(OnChat.orig_DrawChat orig, RemadeChatMonitor self, bool drawingPlayerChat) {
         // orig.Invoke(self, drawingPlayerChat);
         int showCount = (int) _fields["_showCount"].GetValue(self);
         int startChatLine = (int) _fields["_startChatLine"].GetValue(self);
@@ -48,7 +49,7 @@ public class RemadeChatMonitorHooks : ModSystem
 
             TextSnippet[] snippetWithInversedIndex = chatMessageContainer.GetSnippetWithInversedIndex(num3);
 
-            if (snippetWithInversedIndex[0] is ImageSnippet imageSnippet) {
+            if (snippetWithInversedIndex.Length > 0 && snippetWithInversedIndex[0] is ImageSnippet imageSnippet) {
                 offsetY += (int)(imageSnippet.Texture.Height * imageSnippet.Scale);
             }
             else {
@@ -59,7 +60,7 @@ public class RemadeChatMonitorHooks : ModSystem
                 snippetWithInversedIndex, new Vector2(88f, Main.screenHeight - 36 - offsetY), 0f, Vector2.Zero,
                 Vector2.One, out int hoveredSnippet);
                 
-            if (snippetWithInversedIndex[0] is ImageSnippet) {
+            if (snippetWithInversedIndex.Length > 0 && snippetWithInversedIndex[0] is ImageSnippet) {
                 offsetY -= 21;
             }
 
@@ -83,6 +84,25 @@ public class RemadeChatMonitorHooks : ModSystem
             snippetWithInversedIndex2[num7.Value].OnHover();
             if (Main.mouseLeft && Main.mouseLeftRelease)
                 snippetWithInversedIndex2[num7.Value].OnClick();
+        }
+
+        HandleClipboardImage();
+    }
+
+    private static void HandleClipboardImage() {
+        if (Main.inputText.IsKeyDown(Keys.LeftControl) || Main.inputText.IsKeyDown(Keys.RightControl)) { 
+            if (Main.inputText.IsKeyDown(Keys.V) && !Main.oldInputText.IsKeyDown(Keys.V)) {
+                if (NativeClipboard.TryGetBitmap(out var bitmap)) {
+                    var tex = ImageChat.Bitmap2Tex2D(bitmap);
+                    
+                    if (!Utils.TryCreatingDirectory(ImageChat.FolderName))
+                        return;
+                        
+                    string fileName = ImageChat.FolderName + DateTime.Now.ToFileTime() + ".png";
+
+                    ImageChat.LocalSendImage(tex, fileName);
+                }
+            }
         }
     }
 

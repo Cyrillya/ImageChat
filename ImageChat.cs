@@ -4,8 +4,10 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Windows.Forms;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace ImageChat;
@@ -85,7 +87,7 @@ public class ImageChat : Mod
 
                     var tex = new Texture2D(Main.graphics.GraphicsDevice, width, height);
                     tex.SetData(0, new Rectangle(0, 0, width, height), CacheColors.ToArray(), 0, width * height);
-
+                    
                     Main.NewText(name);
 
                     string fileName = FolderName + DateTime.Now.ToFileTime() + ".png";
@@ -130,5 +132,32 @@ public class ImageChat : Mod
         finishPacket.Write(width);
         finishPacket.Write(height);
         finishPacket.Send();
+    }
+
+    public static void LocalSendImage(Texture2D tex, string path) {
+        if (tex.Width > Config.MaximumWidth || tex.Height > Config.MaximumHeight) {
+            MessageBox.Show(
+                Language.GetTextValue("Mods.ImageChat.Common.ImageTooLarge", Config.MaximumWidth,
+                    Config.MaximumHeight), Language.GetTextValue("Mods.ImageChat.Common.Warn"));
+            return;
+        }
+
+        // 设置冷却
+        BasicsSystem.SendDelay = Config.SendCap;
+
+        // 发送图片
+        Main.NewText($"<{Main.LocalPlayer.name}>");
+        RemadeChatMonitorHooks.SendTexture(tex, path);
+
+        // 多人发包
+        if (Main.netMode is NetmodeID.MultiplayerClient) {
+            Instance.SendImagePacket(tex);
+        }
+    }
+
+    public static Texture2D Bitmap2Tex2D(System.Drawing.Bitmap bm) {
+        using var s = new MemoryStream();
+        bm.Save(s, System.Drawing.Imaging.ImageFormat.Png);
+        return Texture2D.FromStream(Main.instance.GraphicsDevice, s);
     }
 }
