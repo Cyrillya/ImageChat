@@ -1,4 +1,3 @@
 displayName = Send Images in Chat
 author = Cyrilly
 version = 1.0
-dllReferences = NetSimplified

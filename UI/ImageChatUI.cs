@@ -1,15 +1,16 @@
-﻿using System;
-using System.Drawing;
-using System.IO;
-using ImageChat.Contents;
-using ImageChat.Packets;
+﻿using ImageChat.Contents;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using System;
+using System.IO;
+using System.Reflection;
+using System.Windows.Forms;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent.UI.Elements;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI;
 using Terraria.Utilities.FileBrowser;
@@ -43,11 +44,20 @@ public class ImageChatUI : UIState
 
                 if (tex is null) return;
 
+                if (tex.Width > 2048 || tex.Height > 2048) {
+                    string warn = "Your image is too large. Please select an image with a size below 2048x2048.";
+                    if (Language.ActiveCulture.Name is "zh-Hans") {
+                        warn = "图像过大。请选择尺寸低于2048x2048的图像。";
+                    }
+                    MessageBox.Show(warn, typeof(Main).GetField("_cachedTitle", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(Main.instance) as string);
+                    return;
+                }
+
                 Main.NewText($"<{Main.LocalPlayer.name}>");
                 RemadeChatMonitorHooks.SendTexture(tex);
 
                 if (Main.netMode is NetmodeID.MultiplayerClient) {
-                    ImagePacket.Get(tex).Send();
+                    ImageChat.Instance.SendImagePacket(tex);
                 }
             }
         };
@@ -56,7 +66,7 @@ public class ImageChatUI : UIState
 
     public override void Update(GameTime gameTime) {
         if (IsMouseHovering) {
-            Main.LocalPlayer.cursorItemIconText = "选择图片";
+            Main.LocalPlayer.cursorItemIconText = "Select image";
             Main.LocalPlayer.mouseInterface = true;
         }
 
