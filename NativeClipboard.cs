@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Drawing;
-using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
-using Microsoft.Xna.Framework.Graphics;
-using Terraria;
 using static System.Drawing.Image;
 
 namespace ImageChat;
@@ -28,16 +24,6 @@ class NativeClipboard
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern IntPtr GetClipboardData(uint uFormat);
-
-    [DllImport("Kernel32.dll", SetLastError = true)]
-    private static extern IntPtr GlobalLock(IntPtr hMem);
-
-    [DllImport("Kernel32.dll", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool GlobalUnlock(IntPtr hMem);
-
-    [DllImport("Kernel32.dll", SetLastError = true)]
-    private static extern int GlobalSize(IntPtr hMem);
 
     public static void SetText(string text) {
         OpenClipboard(IntPtr.Zero);
@@ -67,9 +53,7 @@ class NativeClipboard
             if (handle == IntPtr.Zero) {
                 return false;
             }
-
-            IntPtr pointer = IntPtr.Zero;
-
+            
             try {
                 bitmap = FromHbitmap(handle);
 
