@@ -49,7 +49,7 @@ public class RemadeChatMonitorHooks : ModSystem
             TextSnippet[] snippetWithInversedIndex = chatMessageContainer.GetSnippetWithInversedIndex(num3);
 
             if (snippetWithInversedIndex[0] is ImageSnippet imageSnippet) {
-                offsetY += (int)(imageSnippet.Texture.Height * imageSnippet.Scale) - 18;
+                offsetY += (int)(imageSnippet.Texture.Height * imageSnippet.Scale);
             }
             else {
                 offsetY += 21;
@@ -58,6 +58,11 @@ public class RemadeChatMonitorHooks : ModSystem
             ChatManager.DrawColorCodedStringWithShadow(Main.spriteBatch, FontAssets.MouseText.Value,
                 snippetWithInversedIndex, new Vector2(88f, Main.screenHeight - 36 - offsetY), 0f, Vector2.Zero,
                 Vector2.One, out int hoveredSnippet);
+                
+            if (snippetWithInversedIndex[0] is ImageSnippet) {
+                offsetY -= 21;
+            }
+
             if (hoveredSnippet >= 0) {
                 num7 = hoveredSnippet;
                 num6 = num2;
@@ -81,7 +86,7 @@ public class RemadeChatMonitorHooks : ModSystem
         }
     }
 
-    internal static void SendTexture(Texture2D tex) {
+    internal static void SendTexture(Texture2D tex, string filePath) {
         var msgContainer = new ChatMessageContainer();
         msgContainer.SetContents(" ", Color.White, -1);
 
@@ -90,7 +95,7 @@ public class RemadeChatMonitorHooks : ModSystem
             return;
         }
 
-        textSnippetsList.Add(new TextSnippet[] {new ImageSnippet(tex)});
+        textSnippetsList.Add(new TextSnippet[] {new ImageSnippet(tex, filePath)});
         _msgContainerFields["_parsedText"].SetValue(msgContainer, textSnippetsList);
 
         msgContainersList.Insert(0, msgContainer);

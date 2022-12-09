@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -13,12 +12,29 @@ namespace ImageChat;
 
 public class ImageChat : Mod
 {
-    public static ImageChat Instance;
-    public static List<Color> CacheColors;
+    internal static string FolderName => Main.SavePath + Path.DirectorySeparatorChar + "Captures" +
+                                         Path.DirectorySeparatorChar + "CachedImages" + Path.DirectorySeparatorChar;
+                                         
+    internal static Configuration Config;
+    internal static ImageChat Instance;
+    internal static List<Color> CacheColors;
 
     public override void Load() {
         CacheColors = new List<Color>();
         Instance = this;
+
+        // 自动清理缓存
+        if (!Config.AutoClear || !Directory.Exists(FolderName)) return;
+
+        var folder = new DirectoryInfo(FolderName);
+        // 获取文件夹下所有的文件
+        var fileList = folder.GetFiles();
+        foreach (var file in fileList) {
+            // 判断文件的扩展名是否为 .png
+            if (file.Extension == ".png") {
+                file.Delete(); // 删除
+            }
+        }
     }
 
     public override void Unload() {
@@ -63,26 +79,34 @@ public class ImageChat : Mod
                     string name = reader.ReadString();
                     ushort width = reader.ReadUInt16();
                     ushort height = reader.ReadUInt16();
+                    
+                    if (!Utils.TryCreatingDirectory(FolderName))
+                        break;
 
                     var tex = new Texture2D(Main.graphics.GraphicsDevice, width, height);
                     tex.SetData(0, new Rectangle(0, 0, width, height), CacheColors.ToArray(), 0, width * height);
+
                     Main.NewText(name);
-                    RemadeChatMonitorHooks.SendTexture(tex);
+
+                    string fileName = FolderName + DateTime.Now.ToFileTime() + ".png";
+                    RemadeChatMonitorHooks.SendTexture(tex, fileName);
                     CacheColors.Clear();
                 }
 
                 break;
         }
     }
-
+    
     public void SendImagePacket(Texture2D tex) {
         string name = $"<{Main.LocalPlayer.name}>";
         ushort width = (ushort) tex.Width;
         ushort height = (ushort) tex.Height;
         var colors = new Color[tex.Width * tex.Height];
-        tex.GetData(colors);
-        int i = 0;
         
+        tex.GetData(0, new Rectangle(0, 0, width, height), colors, 0, width * height);
+
+        int i = 0;
+
         while (true) {
             int end = Math.Min(i + 10000, colors.Length); // 发送[i,end)索引内的所有Color
 

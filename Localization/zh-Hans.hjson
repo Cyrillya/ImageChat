@@ -1,0 +1,29 @@
+﻿Mods: {
+	ImageChat: {
+		Config: {
+			MaximumWidth: {
+				Label: "图像最大宽度"
+				Tooltip: "调节范围: 5~2000"
+			}
+			MaximumHeight: {
+				Label: "图像最大高度"
+				Tooltip: "调节范围: 5~2000"
+			}
+			SendCap: {
+				Label: "发送冷却"
+				Tooltip: "在每次发送后必须等待多少秒才能再次发送图像"
+			}
+			AutoClear: {
+				Label: "自动清理缓存"
+				Tooltip: "每次加载模组时自动清理 Captures/CachedImages/ 下的图像文件"
+			}
+		}
+		Common: {
+			ImageTooLarge: "图像过大，请选择尺寸低于{0}x{1}的图像"
+			OpenImage: "打开图片"
+			SelectImage: "选择图片"
+			Warn: "警告"
+			Wait: "你必须等待{0}秒才能发送图像"
+		}
+	}
+}

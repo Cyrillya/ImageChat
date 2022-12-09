@@ -1,5 +1,4 @@
 ﻿using ImageChat.Contents;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using System;
@@ -20,18 +19,27 @@ namespace ImageChat.UI;
 public class ImageChatUI : UIState
 {
     public ImageChatUI() {
-        var colorBtn = new UIImageButton(ModContent.Request<Texture2D>("ImageChat/Images/Directory", AssetRequestMode.ImmediateLoad)) {
-            Top = new StyleDimension(-37, 1),
-            Left = new StyleDimension(-160, 1),
-        };
-        colorBtn.OnClick += delegate {
+        var imageButton =
+            new UIImageButton(ModContent.Request<Texture2D>("ImageChat/Images/Directory",
+                AssetRequestMode.ImmediateLoad)) {
+                Top = new StyleDimension(-37, 1),
+                Left = new StyleDimension(-160, 1),
+            };
+        imageButton.OnClick += delegate {
+            if (BasicsSystem.SendDelay > 0) {
+                MessageBox.Show(Language.GetTextValue("Mods.ImageChat.Common.Wait", BasicsSystem.SendDelay.ToString("F1")),
+                    Language.GetTextValue("Mods.ImageChat.Common.Warn"));
+                return;
+            }
+
             SoundEngine.PlaySound(SoundID.MenuOpen);
 
             var extensions = new ExtensionFilter[] {
                 new("Image files", "png", "jpg", "jpeg")
             };
 
-            string path = FileBrowser.OpenFilePanel("Select image", extensions);
+            string path =
+                FileBrowser.OpenFilePanel(Language.GetTextValue("Mods.ImageChat.Common.SelectImage"), extensions);
             if (path != null) {
                 Texture2D tex = null;
                 try {
@@ -44,32 +52,33 @@ public class ImageChatUI : UIState
 
                 if (tex is null) return;
 
-                if (tex.Width > 2048 || tex.Height > 2048) {
-                    string warn = "Your image is too large. Please select an image with a size below 2048x2048.";
-                    if (Language.ActiveCulture.Name is "zh-Hans") {
-                        warn = "图像过大。请选择尺寸低于2048x2048的图像。";
-                    }
-                    MessageBox.Show(warn, typeof(Main).GetField("_cachedTitle", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(Main.instance) as string);
+                var config = ImageChat.Config;
+                if (tex.Width > config.MaximumWidth || tex.Height > config.MaximumHeight) {
+                    MessageBox.Show(
+                        Language.GetTextValue("Mods.ImageChat.Common.ImageTooLarge", config.MaximumWidth,
+                            config.MaximumHeight), Language.GetTextValue("Mods.ImageChat.Common.Warn"));
                     return;
                 }
 
-                Main.NewText($"<{Main.LocalPlayer.name}>");
-                RemadeChatMonitorHooks.SendTexture(tex);
+                // 设置冷却
+                BasicsSystem.SendDelay = config.SendCap;
 
+                // 发送图片
+                Main.NewText($"<{Main.LocalPlayer.name}>");
+                RemadeChatMonitorHooks.SendTexture(tex, path);
+
+                // 多人发包
                 if (Main.netMode is NetmodeID.MultiplayerClient) {
                     ImageChat.Instance.SendImagePacket(tex);
                 }
             }
         };
-        Append(colorBtn);
-    }
+        imageButton.OnUpdate += element => {
+            if (!element.IsMouseHovering) return;
 
-    public override void Update(GameTime gameTime) {
-        if (IsMouseHovering) {
-            Main.LocalPlayer.cursorItemIconText = "Select image";
             Main.LocalPlayer.mouseInterface = true;
-        }
-
-        base.Update(gameTime);
+            Main.LocalPlayer.cursorItemIconText = Language.GetTextValue("Mods.ImageChat.Common.SelectImage");
+        };
+        Append(imageButton);
     }
 }
