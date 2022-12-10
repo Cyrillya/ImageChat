@@ -24,7 +24,7 @@ public class BasicsSystem : ModSystem
     internal static BasicsSystem Instance;
 
     public override void Load() {
-        ScrnshotKeybind = KeybindLoader.RegisterKeybind(Mod, "Screenshot", "OemPipe");
+        ScrnshotKeybind = KeybindLoader.RegisterKeybind(Mod, "Screen Capture", "OemPipe");
         Instance = this;
     }
 
@@ -46,84 +46,82 @@ public class BasicsSystem : ModSystem
     }
 
     public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers) {
-        int mouseTextIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Mouse Text"));
-        if (mouseTextIndex != -1) {
-            layers.Insert(mouseTextIndex, new LegacyGameInterfaceLayer("ImageChat: Screenshot Border", delegate {
-                    if (!Screenshoting) {
-                        return true;
-                    }
-
-                    if (Main.mouseRight) {
-                        Screenshoting = false;
-                        _rangeSelecting = false;
-                        return true;
-                    }
-
-                    if (!_rangeSelecting) {
-                        if (Main.mouseLeft) {
-                            _rangeSelecting = true;
-                            _startPosition = Main.MouseScreen;
-                            _startPointWindow = NativeMethods.GetCursorPosition();
-                        }
-                        else {
-                            return true;
-                        }
-                    }
-
-                    if (_screenshotTimer is -1) {
-                        _endPosition = Main.MouseScreen;
-                        _endPointWindow = NativeMethods.GetCursorPosition();
-                    }
-
-                    if (_screenshotTimer > 0) {
-                        _screenshotTimer--;
-                        return true;
-                    }
-
-                    if (_screenshotTimer is 0) {
-                        Screenshoting = false;
-                        _rangeSelecting = false;
-                        _screenshotTimer = -1;
-
-                        // 截屏区域
-                        var leftTop = new System.Drawing.Point(Math.Min(_startPointWindow.X, _endPointWindow.X),
-                            Math.Min(_startPointWindow.Y, _endPointWindow.Y));
-                        var size = new System.Drawing.Size(Math.Max(_startPointWindow.X, _endPointWindow.X) - leftTop.X,
-                            Math.Max(_startPointWindow.Y, _endPointWindow.Y) - leftTop.Y);
-
-                        if (size.Width <= 0 || size.Height <= 0) return true;
-
-                        // 截屏
-                        var bm = NativeMethods.CaptureRectangleNative(new System.Drawing.Rectangle(leftTop, size));
-
-                        // 发送截屏
-                        if (!ImageChat.Config.ScreenshotToChat) return true;
-
-                        var tex = ImageChat.Bitmap2Tex2D(bm);
-                        if (!Utils.TryCreatingDirectory(ImageChat.FolderName)) return true;
-
-                        ImageChat.LocalSendImage(tex, ImageChat.FolderName + DateTime.Now.ToFileTime() + ".png");
-                        return true;
-                    }
-
-                    if (Main.mouseLeftRelease && !Main.mouseLeft) {
-                        _screenshotTimer = 2;
-                        return true;
-                    }
-
-                    var leftTopDrawing = new Vector2((int) Math.Min(_startPosition.X, _endPosition.X),
-                        (int) Math.Min(_startPosition.Y, _endPosition.Y));
-                    int width = (int) (Math.Max(_startPosition.X, _endPosition.X) - leftTopDrawing.X);
-                    int height = (int) (Math.Max(_startPosition.Y, _endPosition.Y) - leftTopDrawing.Y);
-
-                    var color = Color.GreenYellow;
-                    DrawBorder(new Vector2(leftTopDrawing.X, leftTopDrawing.Y), width, height, color * 0.35f, color);
-
+        // 直接加到最后一层，反映实在的截屏区域
+        layers.Add(new LegacyGameInterfaceLayer("ImageChat: Screenshot Border", () => { 
+                if (!Screenshoting) {
                     return true;
-                },
-                InterfaceScaleType.UI)
-            );
-        }
+                }
+
+                if (Main.mouseRight) {
+                    Screenshoting = false;
+                    _rangeSelecting = false;
+                    return true;
+                }
+
+                if (!_rangeSelecting) {
+                    if (Main.mouseLeft) {
+                        _rangeSelecting = true;
+                        _startPosition = Main.MouseScreen;
+                        _startPointWindow = NativeMethods.GetCursorPosition();
+                    }
+                    else {
+                        return true;
+                    }
+                }
+
+                if (_screenshotTimer is -1) {
+                    _endPosition = Main.MouseScreen;
+                    _endPointWindow = NativeMethods.GetCursorPosition();
+                }
+
+                if (_screenshotTimer > 0) {
+                    _screenshotTimer--;
+                    return true;
+                }
+
+                if (_screenshotTimer is 0) {
+                    Screenshoting = false;
+                    _rangeSelecting = false;
+                    _screenshotTimer = -1;
+
+                    // 截屏区域
+                    var leftTop = new System.Drawing.Point(Math.Min(_startPointWindow.X, _endPointWindow.X),
+                        Math.Min(_startPointWindow.Y, _endPointWindow.Y));
+                    var size = new System.Drawing.Size(Math.Max(_startPointWindow.X, _endPointWindow.X) - leftTop.X,
+                        Math.Max(_startPointWindow.Y, _endPointWindow.Y) - leftTop.Y);
+
+                    if (size.Width <= 0 || size.Height <= 0) return true;
+
+                    // 截屏
+                    var bm = NativeMethods.CaptureRectangleNative(new System.Drawing.Rectangle(leftTop, size));
+
+                    // 发送截屏
+                    if (!ImageChat.Config.ScreenshotToChat) return true;
+
+                    var tex = ImageChat.Bitmap2Tex2D(bm);
+                    if (!Utils.TryCreatingDirectory(ImageChat.FolderName)) return true;
+
+                    ImageChat.LocalSendImage(tex, ImageChat.FolderName + DateTime.Now.ToFileTime() + ".png");
+                    return true;
+                }
+
+                if (Main.mouseLeftRelease && !Main.mouseLeft) {
+                    _screenshotTimer = 2;
+                    return true;
+                }
+
+                var leftTopDrawing = new Vector2((int) Math.Min(_startPosition.X, _endPosition.X),
+                    (int) Math.Min(_startPosition.Y, _endPosition.Y));
+                int width = (int) (Math.Max(_startPosition.X, _endPosition.X) - leftTopDrawing.X);
+                int height = (int) (Math.Max(_startPosition.Y, _endPosition.Y) - leftTopDrawing.Y);
+
+                var color = Color.GreenYellow;
+                DrawBorder(new Vector2(leftTopDrawing.X, leftTopDrawing.Y), width, height, color * 0.35f, color);
+
+                return true;
+            },
+            InterfaceScaleType.UI)
+        );
     }
 
     public static void DrawBorder(Vector2 position, float width, float height, Color backgroundColor,

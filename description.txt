@@ -1,15 +1,31 @@
 ﻿A mod that allows you to send images to chat or take in-game screenshots from within tModLoader.
+
 When you copied an image, pressing Ctrl+V when chat is open will send the image to chat.
+
 You need to bind a key to take in-game screenshots. The image will be immediately sent to chat and will be copied to the clipboard.
-Sending images in multiplayer games may contain a lot of data, make sure you have enough traffic.
+
+Sending large images in multiplayer may contain a lot of data, make sure you have enough traffic, or you can adjust the image size limit
+
+Compatible with mod Better Chat
+
 Currently you can only send images on Windows, MacOS and Linux are not yet supported
+
 Open source on GitHub: https://github.com/Cyrillya/ImageChat
 Report any bugs in discord server: https://discord.gg/rEmGMQv5z7
 
+
+
 一个允许你在tModLoader中发送图片或进行游戏内截图的Mod
+
 当你复制了一张图片，在聊天打开时按下Ctrl+V，就会把图片发送到聊天中
+
 你需要绑定键位来进行游戏内截图。图像会立即发送到聊天栏，并会被复制到剪贴板
-在多人游戏中发送图片可能包含大量数据，请确保你有足够的流量
+
+在多人游戏中发送较大图片可能包含大量数据，请确保你有足够的流量，或调节图片尺寸限制
+
+与Better Chat Mod兼容
+
 目前你只能在Windows上发送图片，暂不支持MacOS和Linux操作系统
+
 在GitHub开源: https://github.com/Cyrillya/ImageChat
 可以的话建议在Discord服务器反馈Bug: https://discord.gg/rEmGMQv5z7

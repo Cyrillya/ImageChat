@@ -128,7 +128,10 @@ public class RemadeChatMonitorHooks : ModSystem
 
             TextSnippet[] snippetWithInversedIndex = chatMessageContainer.GetSnippetWithInversedIndex(num3);
 
-            if (snippetWithInversedIndex.Length > 0 && snippetWithInversedIndex[0] is ImageSnippet imageSnippet) {
+            bool isImage = snippetWithInversedIndex.Length > 0 && snippetWithInversedIndex[0] is ImageSnippet;
+
+            if (isImage) {
+                var imageSnippet = snippetWithInversedIndex[0] as ImageSnippet;
                 offsetY += (int) (imageSnippet.Texture.Height * imageSnippet.Scale);
             }
             else {
@@ -145,6 +148,10 @@ public class RemadeChatMonitorHooks : ModSystem
                 snippetIndex = num3;
             }
 
+            // 防止刷屏 & 只绘制了一个图片的话不断掉(也就是不包括人名不断掉)
+            if (offsetY > 220 && !isImage) {
+                break;
+            }
 
             line++;
             num3++;
