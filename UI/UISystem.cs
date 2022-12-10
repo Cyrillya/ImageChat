@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using Terraria;
-using Terraria.UI;
 using Terraria.ModLoader;
+using Terraria.UI;
 
 namespace ImageChat.UI;
 
@@ -10,19 +10,17 @@ public class UISystem : ModSystem
 {
     internal UserInterface UserInterface;
 
-    public override void Load() {
-        if (!Main.dedServ) {
-            UserInterface = new UserInterface();
-            UserInterface.SetState(new ImageChatUI());
-        }
+    public override void PostSetupContent() {
+        if (Main.dedServ) return;
 
-        base.Load();
+        UserInterface = new UserInterface();
+        UserInterface.SetState(new ImageChatUI());
     }
 
     public override void Unload() {
-        UserInterface = null;
+        if (Main.dedServ) return;
 
-        base.Unload();
+        UserInterface = null;
     }
 
     private GameTime _lastUpdateUiGameTime;

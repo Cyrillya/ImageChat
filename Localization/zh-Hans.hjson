@@ -17,6 +17,14 @@
 				Label: "自动清理缓存"
 				Tooltip: "每次加载模组时自动清理 Captures/CachedImages/ 下的图像文件"
 			}
+			ScreenshotClipboard: {
+				Label: "将截图复制到剪贴板"
+				Tooltip: "开启后，游戏内截图将自动复制到剪贴板"
+			}
+			ScreenshotToChat: {
+				Label: "将截图发送到聊天"
+				Tooltip: "开启后，游戏内截图将自动发送到聊天"
+			}
 		}
 		Common: {
 			ImageTooLarge: "图像过大，请选择尺寸低于{0}x{1}的图像"

@@ -1,12 +1,11 @@
 ﻿using ImageChat.Contents;
 using Microsoft.Xna.Framework.Graphics;
-using ReLogic.Content;
 using System;
 using System.IO;
-using System.Reflection;
 using System.Windows.Forms;
 using Terraria;
 using Terraria.Audio;
+using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
 using Terraria.ID;
 using Terraria.Localization;
@@ -19,11 +18,10 @@ namespace ImageChat.UI;
 public class ImageChatUI : UIState
 {
     public ImageChatUI() {
-        var imageButton =
-            new UIImageButton(ModContent.Request<Texture2D>("ImageChat/Images/Directory",
-                AssetRequestMode.ImmediateLoad)) {
+        float x = ModLoader.HasMod("BetterChat") ? -110 : -220;
+        var imageButton = new UIImageButton(TextureAssets.Camera[6]) {
                 Top = new StyleDimension(-37, 1),
-                Left = new StyleDimension(-160, 1),
+                Left = new StyleDimension(x, 1),
             };
         imageButton.OnClick += delegate {
             if (BasicsSystem.SendDelay > 0) {
@@ -59,7 +57,7 @@ public class ImageChatUI : UIState
             if (!element.IsMouseHovering) return;
 
             Main.LocalPlayer.mouseInterface = true;
-            Main.LocalPlayer.cursorItemIconText = Language.GetTextValue("Mods.ImageChat.Common.SelectImage");
+            Main.instance.MouseText(Language.GetTextValue("Mods.ImageChat.Common.SelectImage"));
         };
         Append(imageButton);
     }

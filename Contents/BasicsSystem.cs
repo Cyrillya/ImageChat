@@ -91,11 +91,17 @@ public class BasicsSystem : ModSystem
                         var size = new System.Drawing.Size(Math.Max(_startPointWindow.X, _endPointWindow.X) - leftTop.X,
                             Math.Max(_startPointWindow.Y, _endPointWindow.Y) - leftTop.Y);
 
+                        if (size.Width <= 0 || size.Height <= 0) return true;
+
                         // 截屏
                         var bm = NativeMethods.CaptureRectangleNative(new System.Drawing.Rectangle(leftTop, size));
+
+                        // 发送截屏
+                        if (!ImageChat.Config.ScreenshotToChat) return true;
+
                         var tex = ImageChat.Bitmap2Tex2D(bm);
-                        if (!Utils.TryCreatingDirectory(ImageChat.FolderName))
-                            return true;
+                        if (!Utils.TryCreatingDirectory(ImageChat.FolderName)) return true;
+
                         ImageChat.LocalSendImage(tex, ImageChat.FolderName + DateTime.Now.ToFileTime() + ".png");
                         return true;
                     }

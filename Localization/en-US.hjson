@@ -21,6 +21,14 @@ Mods: {
 				Label: "Automatic Cache Cleanup"
 				Tooltip: "Automatically clean up the image files under Captures/CachedImages/ each time the mod is loaded"
 			}
+			ScreenshotClipboard: {
+				Label: "Copy the Screenshot to the Clipboard"
+				Tooltip: "Once enabled, in-game screenshots will be automatically copied to the clipboard"
+			}
+			ScreenshotToChat: {
+				Label: "Send Screenshots to Chat"
+				Tooltip: "Once enabled, in-game screenshots will be automatically sent to the chat"
+			}
 		}
 		Common: {
 			ImageTooLarge: "Your image is too large. Please select an image with a size below {0}x{1}."

@@ -56,7 +56,7 @@ public class ImageChat : Mod
                         p.Write(reader.ReadUInt32());
                     }
 
-                    p.Send();
+                    p.Send(ignoreClient: whoAmI);
                 }
                 else {
                     ushort length = reader.ReadUInt16();
@@ -75,7 +75,7 @@ public class ImageChat : Mod
                     p.Write(reader.ReadString());
                     p.Write(reader.ReadUInt16());
                     p.Write(reader.ReadUInt16());
-                    p.Send();
+                    p.Send(ignoreClient: whoAmI);
                 }
                 else {
                     string name = reader.ReadString();
@@ -135,10 +135,15 @@ public class ImageChat : Mod
     }
 
     public static void LocalSendImage(Texture2D tex, string path) {
+        if (BasicsSystem.SendDelay > 0) {
+            MessageBox.Show(Language.GetTextValue("Mods.ImageChat.Common.Wait", BasicsSystem.SendDelay.ToString("F1")),
+                Language.GetTextValue("Mods.ImageChat.Common.Warn"));
+            return;
+        }
+
         if (tex.Width > Config.MaximumWidth || tex.Height > Config.MaximumHeight) {
-            MessageBox.Show(
-                Language.GetTextValue("Mods.ImageChat.Common.ImageTooLarge", Config.MaximumWidth,
-                    Config.MaximumHeight), Language.GetTextValue("Mods.ImageChat.Common.Warn"));
+            MessageBox.Show(Language.GetTextValue("Mods.ImageChat.Common.ImageTooLarge", Config.MaximumWidth,
+                Config.MaximumHeight), Language.GetTextValue("Mods.ImageChat.Common.Warn"));
             return;
         }
 

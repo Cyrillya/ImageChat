@@ -33,4 +33,14 @@ public class Configuration : ModConfig
     [Tooltip("$Mods.ImageChat.Config.AutoClear.Tooltip")]
     [DefaultValue(true)]
     public bool AutoClear;
+
+    [Label("$Mods.ImageChat.Config.ScreenshotClipboard.Label")]
+    [Tooltip("$Mods.ImageChat.Config.ScreenshotClipboard.Tooltip")]
+    [DefaultValue(true)]
+    public bool ScreenshotClipboard;
+
+    [Label("$Mods.ImageChat.Config.ScreenshotToChat.Label")]
+    [Tooltip("$Mods.ImageChat.Config.ScreenshotToChat.Tooltip")]
+    [DefaultValue(true)]
+    public bool ScreenshotToChat;
 }
