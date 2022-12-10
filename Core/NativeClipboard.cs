@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Threading;
 using static System.Drawing.Image;
 
-namespace ImageChat;
+namespace ImageChat.Core;
 
-class NativeClipboard
+internal partial class NativeMethods
 {
     private const uint CF_BITMAP = 2U;
 
-    [DllImport("User32.dll", SetLastError = true)]
+    [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool IsClipboardFormatAvailable(uint format);
 
@@ -18,52 +19,59 @@ class NativeClipboard
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool CloseClipboard();
-
-    [DllImport("user32.dll")]
+    
+    [DllImport("user32.dll", SetLastError = true)]
     private static extern bool SetClipboardData(uint uFormat, IntPtr data);
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern IntPtr GetClipboardData(uint uFormat);
 
-    public static void SetText(string text) {
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool EmptyClipboard();
+
+    public static void SetClipboardBitmap(IntPtr hBitmap) {
         OpenClipboard(IntPtr.Zero);
-
-        var ptr = Marshal.StringToHGlobalUni(text);
-
-        SetClipboardData(13, ptr);
+        EmptyClipboard();
+        SetClipboardData(CF_BITMAP, hBitmap); // 这里又用到指针
         CloseClipboard();
-
-        //Marshal.FreeHGlobal(ptr);
     }
 
-    public static bool TryGetBitmap(out Bitmap bitmap) {
+    public static bool ClipboardTryGetBitmap(out Bitmap bitmap)
+    {
         bitmap = null;
 
-        if (!IsClipboardFormatAvailable(CF_BITMAP)) {
+        if (!IsClipboardFormatAvailable(CF_BITMAP))
+        {
             return false;
         }
 
-        try {
-            if (!OpenClipboard(IntPtr.Zero)) {
+        try
+        {
+            if (!OpenClipboard(IntPtr.Zero))
+            {
                 return false;
             }
 
             IntPtr handle = GetClipboardData(CF_BITMAP);
 
-            if (handle == IntPtr.Zero) {
+            if (handle == IntPtr.Zero)
+            {
                 return false;
             }
-            
-            try {
+
+            try
+            {
                 bitmap = FromHbitmap(handle);
 
                 return true;
             }
-            catch {
+            catch
+            {
                 return false;
             }
         }
-        finally {
+        finally
+        {
             CloseClipboard();
         }
     }

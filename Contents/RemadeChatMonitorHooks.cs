@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using ImageChat.Core;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ using Terraria.ModLoader;
 using Terraria.UI.Chat;
 using Keys = Microsoft.Xna.Framework.Input.Keys;
 using OnChat = On.Terraria.GameContent.UI.Chat.RemadeChatMonitor;
+using OnContainer = On.Terraria.UI.Chat.ChatMessageContainer;
 
 namespace ImageChat.Contents;
 
@@ -17,6 +19,83 @@ public class RemadeChatMonitorHooks : ModSystem
 {
     private static Dictionary<string, FieldInfo> _fields;
     private static Dictionary<string, FieldInfo> _msgContainerFields;
+
+    private static void HandleClipboardImage() {
+        if (Main.inputText.IsKeyDown(Keys.LeftControl) || Main.inputText.IsKeyDown(Keys.RightControl)) {
+            if (Main.inputText.IsKeyDown(Keys.V) && !Main.oldInputText.IsKeyDown(Keys.V)) {
+                if (NativeMethods.ClipboardTryGetBitmap(out var bitmap)) {
+                    var tex = ImageChat.Bitmap2Tex2D(bitmap);
+
+                    if (!Utils.TryCreatingDirectory(ImageChat.FolderName))
+                        return;
+
+                    string fileName = ImageChat.FolderName + DateTime.Now.ToFileTime() + ".png";
+
+                    ImageChat.LocalSendImage(tex, fileName);
+                }
+            }
+        }
+    }
+
+    internal static void SendTexture(Texture2D tex, string filePath) {
+        var msgContainer = new ChatMessageContainer();
+        msgContainer.SetContents(" ", Color.White, -1);
+
+        if (_msgContainerFields["_parsedText"].GetValue(msgContainer) is not List<TextSnippet[]> textSnippetsList ||
+            _fields["_messages"].GetValue(Main.chatMonitor) is not List<ChatMessageContainer> msgContainersList) {
+            return;
+        }
+
+        textSnippetsList = new List<TextSnippet[]> {
+            new TextSnippet[] {new ImageSnippet(tex, filePath)}
+        };
+        _msgContainerFields["_parsedText"].SetValue(msgContainer, textSnippetsList);
+
+        msgContainersList.Insert(0, msgContainer);
+        while (msgContainersList.Count > 500) {
+            msgContainersList.RemoveAt(msgContainersList.Count - 1);
+        }
+
+        _fields["_messages"].SetValue(Main.chatMonitor, msgContainersList);
+    }
+
+    public override void Load() {
+        var fields = typeof(RemadeChatMonitor).GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+        var msgContainerFields = typeof(ChatMessageContainer).GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+
+        _fields = new Dictionary<string, FieldInfo>();
+        _msgContainerFields = new Dictionary<string, FieldInfo>();
+
+        foreach (var f in fields) {
+            _fields[f.Name] = f;
+        }
+
+        foreach (var f in msgContainerFields) {
+            _msgContainerFields[f.Name] = f;
+        }
+
+        // 聊天框绘制
+        OnChat.DrawChat += HookDrawChat;
+
+        // 刷新时不应把存好的 ImageSnippet 刷新掉
+        OnContainer.Refresh += (orig, msgContainer) => {
+            if (msgContainer.Prepared ||
+                _msgContainerFields["_parsedText"].GetValue(msgContainer) is not List<TextSnippet[]> {
+                    Count: 1
+                } textSnippetsList || textSnippetsList[0].Length is not 1 ||
+                textSnippetsList[0][0] is not ImageSnippet) {
+                orig.Invoke(msgContainer);
+                return;
+            }
+
+            // 另开一个List，因为 textSnippetsList 是引用类型
+            var savedList = new List<TextSnippet[]> {
+                new[] {textSnippetsList[0][0]}
+            };
+            orig.Invoke(msgContainer);
+            _msgContainerFields["_parsedText"].SetValue(msgContainer, savedList);
+        };
+    }
 
     private static void HookDrawChat(OnChat.orig_DrawChat orig, RemadeChatMonitor self, bool drawingPlayerChat) {
         // orig.Invoke(self, drawingPlayerChat);
@@ -50,7 +129,7 @@ public class RemadeChatMonitorHooks : ModSystem
             TextSnippet[] snippetWithInversedIndex = chatMessageContainer.GetSnippetWithInversedIndex(num3);
 
             if (snippetWithInversedIndex.Length > 0 && snippetWithInversedIndex[0] is ImageSnippet imageSnippet) {
-                offsetY += (int)(imageSnippet.Texture.Height * imageSnippet.Scale);
+                offsetY += (int) (imageSnippet.Texture.Height * imageSnippet.Scale);
             }
             else {
                 offsetY += 21;
@@ -59,10 +138,6 @@ public class RemadeChatMonitorHooks : ModSystem
             ChatManager.DrawColorCodedStringWithShadow(Main.spriteBatch, FontAssets.MouseText.Value,
                 snippetWithInversedIndex, new Vector2(88f, Main.screenHeight - 36 - offsetY), 0f, Vector2.Zero,
                 Vector2.One, out int hoveredSnippet);
-                
-            if (snippetWithInversedIndex.Length > 0 && snippetWithInversedIndex[0] is ImageSnippet) {
-                offsetY -= 21;
-            }
 
             if (hoveredSnippet >= 0) {
                 num7 = hoveredSnippet;
@@ -87,62 +162,6 @@ public class RemadeChatMonitorHooks : ModSystem
         }
 
         HandleClipboardImage();
-    }
-
-    private static void HandleClipboardImage() {
-        if (Main.inputText.IsKeyDown(Keys.LeftControl) || Main.inputText.IsKeyDown(Keys.RightControl)) { 
-            if (Main.inputText.IsKeyDown(Keys.V) && !Main.oldInputText.IsKeyDown(Keys.V)) {
-                if (NativeClipboard.TryGetBitmap(out var bitmap)) {
-                    var tex = ImageChat.Bitmap2Tex2D(bitmap);
-                    
-                    if (!Utils.TryCreatingDirectory(ImageChat.FolderName))
-                        return;
-                        
-                    string fileName = ImageChat.FolderName + DateTime.Now.ToFileTime() + ".png";
-
-                    ImageChat.LocalSendImage(tex, fileName);
-                }
-            }
-        }
-    }
-
-    internal static void SendTexture(Texture2D tex, string filePath) {
-        var msgContainer = new ChatMessageContainer();
-        msgContainer.SetContents(" ", Color.White, -1);
-
-        if (_msgContainerFields["_parsedText"].GetValue(msgContainer) is not List<TextSnippet[]> textSnippetsList ||
-            _fields["_messages"].GetValue(Main.chatMonitor) is not List<ChatMessageContainer> msgContainersList) {
-            return;
-        }
-
-        textSnippetsList.Add(new TextSnippet[] {new ImageSnippet(tex, filePath)});
-        _msgContainerFields["_parsedText"].SetValue(msgContainer, textSnippetsList);
-
-        msgContainersList.Insert(0, msgContainer);
-        while (msgContainersList.Count > 500) {
-            msgContainersList.RemoveAt(msgContainersList.Count - 1);
-        }
-
-        _fields["_messages"].SetValue(Main.chatMonitor, msgContainersList);
-    }
-
-    public override void Load() {
-        var fields = typeof(RemadeChatMonitor).GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
-        var msgContainerFields = typeof(ChatMessageContainer).GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
-
-        _fields = new Dictionary<string, FieldInfo>();
-        _msgContainerFields = new Dictionary<string, FieldInfo>();
-
-        foreach (var f in fields) {
-            _fields[f.Name] = f;
-        }
-
-        foreach (var f in msgContainerFields) {
-            _msgContainerFields[f.Name] = f;
-        }
-
-
-        OnChat.DrawChat += HookDrawChat;
     }
 
     public override void Unload() {
