@@ -16,7 +16,7 @@ public class ImageChat : Mod
 {
     internal static string FolderName => Main.SavePath + Path.DirectorySeparatorChar + "Captures" +
                                          Path.DirectorySeparatorChar + "CachedImages" + Path.DirectorySeparatorChar;
-                                         
+
     internal static Configuration Config;
     internal static ImageChat Instance;
     internal static List<Color> CacheColors;
@@ -81,13 +81,13 @@ public class ImageChat : Mod
                     string name = reader.ReadString();
                     ushort width = reader.ReadUInt16();
                     ushort height = reader.ReadUInt16();
-                    
+
                     if (!Utils.TryCreatingDirectory(FolderName))
                         break;
 
                     var tex = new Texture2D(Main.graphics.GraphicsDevice, width, height);
                     tex.SetData(0, new Rectangle(0, 0, width, height), CacheColors.ToArray(), 0, width * height);
-                    
+
                     Main.NewText(name);
 
                     string fileName = FolderName + DateTime.Now.ToFileTime() + ".png";
@@ -98,13 +98,13 @@ public class ImageChat : Mod
                 break;
         }
     }
-    
+
     public void SendImagePacket(Texture2D tex) {
         string name = $"<{Main.LocalPlayer.name}>";
         ushort width = (ushort) tex.Width;
         ushort height = (ushort) tex.Height;
         var colors = new Color[tex.Width * tex.Height];
-        
+
         tex.GetData(0, new Rectangle(0, 0, width, height), colors, 0, width * height);
 
         int i = 0;

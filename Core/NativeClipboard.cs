@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
-using System.Threading;
 using static System.Drawing.Image;
 
 namespace ImageChat.Core;
@@ -19,7 +18,7 @@ internal partial class NativeMethods
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool CloseClipboard();
-    
+
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool SetClipboardData(uint uFormat, IntPtr data);
 
@@ -36,42 +35,34 @@ internal partial class NativeMethods
         CloseClipboard();
     }
 
-    public static bool ClipboardTryGetBitmap(out Bitmap bitmap)
-    {
+    public static bool ClipboardTryGetBitmap(out Bitmap bitmap) {
         bitmap = null;
 
-        if (!IsClipboardFormatAvailable(CF_BITMAP))
-        {
+        if (!IsClipboardFormatAvailable(CF_BITMAP)) {
             return false;
         }
 
-        try
-        {
-            if (!OpenClipboard(IntPtr.Zero))
-            {
+        try {
+            if (!OpenClipboard(IntPtr.Zero)) {
                 return false;
             }
 
             IntPtr handle = GetClipboardData(CF_BITMAP);
 
-            if (handle == IntPtr.Zero)
-            {
+            if (handle == IntPtr.Zero) {
                 return false;
             }
 
-            try
-            {
+            try {
                 bitmap = FromHbitmap(handle);
 
                 return true;
             }
-            catch
-            {
+            catch {
                 return false;
             }
         }
-        finally
-        {
+        finally {
             CloseClipboard();
         }
     }
