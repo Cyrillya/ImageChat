@@ -21,20 +21,23 @@ public class ImageChat : Mod
     internal static ImageChat Instance;
     internal static List<Color> CacheColors;
 
+    public static string GenerateFileName() =>
+        FolderName + DateTime.Now.ToFileTime() + ".png";
+
     public override void Load() {
         CacheColors = new List<Color>();
         Instance = this;
 
-        // ×Ô¶¯ÇåÀí»º´æ
+        // è‡ªåŠ¨æ¸…ç†ç¼“å­˜
         if (!Config.AutoClear || !Directory.Exists(FolderName)) return;
 
         var folder = new DirectoryInfo(FolderName);
-        // »ñÈ¡ÎÄ¼ş¼ĞÏÂËùÓĞµÄÎÄ¼ş
+        // è·å–æ–‡ä»¶å¤¹ä¸‹æ‰€æœ‰çš„æ–‡ä»¶
         var fileList = folder.GetFiles();
         foreach (var file in fileList) {
-            // ÅĞ¶ÏÎÄ¼şµÄÀ©Õ¹ÃûÊÇ·ñÎª .png
+            // åˆ¤æ–­æ–‡ä»¶çš„æ‰©å±•åæ˜¯å¦ä¸º .png
             if (file.Extension == ".png") {
-                file.Delete(); // É¾³ı
+                file.Delete(); // åˆ é™¤
             }
         }
     }
@@ -46,7 +49,7 @@ public class ImageChat : Mod
 
     public override void HandlePacket(BinaryReader reader, int whoAmI) {
         switch (reader.ReadByte()) {
-            case 0: // ´«ÊäÖĞ
+            case 0: // ä¼ è¾“ä¸­
                 if (Main.netMode is NetmodeID.Server) {
                     var p = GetPacket();
                     ushort length = reader.ReadUInt16();
@@ -68,10 +71,10 @@ public class ImageChat : Mod
                 }
 
                 break;
-            case 1: // Íê³É°ü
+            case 1: // å®ŒæˆåŒ…
                 if (Main.netMode is NetmodeID.Server) {
                     var p = GetPacket();
-                    p.Write((byte) 1); // °üÀàĞÍ
+                    p.Write((byte) 1); // åŒ…ç±»å‹
                     p.Write(reader.ReadString());
                     p.Write(reader.ReadUInt16());
                     p.Write(reader.ReadUInt16());
@@ -110,13 +113,13 @@ public class ImageChat : Mod
         int i = 0;
 
         while (true) {
-            int end = Math.Min(i + 10000, colors.Length); // ·¢ËÍ[i,end)Ë÷ÒıÄÚµÄËùÓĞColor
+            int end = Math.Min(i + 10000, colors.Length); // å‘é€[i,end)ç´¢å¼•å†…çš„æ‰€æœ‰Color
 
             var p = GetPacket();
-            p.Write((byte) 0); // °üÀàĞÍ
-            p.Write((ushort) (end - i)); // ·¢ËÍµÄColorÊıÁ¿
+            p.Write((byte) 0); // åŒ…ç±»å‹
+            p.Write((ushort) (end - i)); // å‘é€çš„Coloræ•°é‡
             for (; i < end; i++) {
-                p.Write(colors[i].PackedValue); // ·¢ËÍËùÓĞÑÕÉ«
+                p.Write(colors[i].PackedValue); // å‘é€æ‰€æœ‰é¢œè‰²
             }
 
             p.Send();
@@ -127,7 +130,7 @@ public class ImageChat : Mod
         }
 
         var finishPacket = GetPacket();
-        finishPacket.Write((byte) 1); // °üÀàĞÍ
+        finishPacket.Write((byte) 1); // åŒ…ç±»å‹
         finishPacket.Write(name);
         finishPacket.Write(width);
         finishPacket.Write(height);
@@ -147,14 +150,14 @@ public class ImageChat : Mod
             return;
         }
 
-        // ÉèÖÃÀäÈ´
+        // è®¾ç½®å†·å´
         BasicsSystem.SendDelay = Config.SendCap;
 
-        // ·¢ËÍÍ¼Æ¬
+        // å‘é€å›¾ç‰‡
         Main.NewText($"<{Main.LocalPlayer.name}>");
         RemadeChatMonitorHooks.SendTexture(tex, path);
 
-        // ¶àÈË·¢°ü
+        // å¤šäººå‘åŒ…
         if (Main.netMode is NetmodeID.MultiplayerClient) {
             Instance.SendImagePacket(tex);
         }

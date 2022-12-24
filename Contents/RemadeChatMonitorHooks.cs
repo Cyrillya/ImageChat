@@ -23,7 +23,7 @@ public class RemadeChatMonitorHooks : ModSystem
     private static void HandleClipboardImage() {
         if (Main.inputText.IsKeyDown(Keys.LeftControl) || Main.inputText.IsKeyDown(Keys.RightControl)) {
             if (Main.inputText.IsKeyDown(Keys.V) && !Main.oldInputText.IsKeyDown(Keys.V)) {
-                if (NativeMethods.ClipboardTryGetBitmap(out var bitmap)) {
+                if (WindowsMethods.ClipboardTryGetBitmap(out var bitmap)) {
                     var tex = ImageChat.Bitmap2Tex2D(bitmap);
 
                     if (!Utils.TryCreatingDirectory(ImageChat.FolderName))

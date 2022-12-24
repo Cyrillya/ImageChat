@@ -62,7 +62,7 @@ public class BasicsSystem : ModSystem
                     if (Main.mouseLeft) {
                         _rangeSelecting = true;
                         _startPosition = Main.MouseScreen;
-                        _startPointWindow = NativeMethods.GetCursorPosition();
+                        _startPointWindow = WindowsMethods.GetCursorPosition();
                     }
                     else {
                         return true;
@@ -71,7 +71,7 @@ public class BasicsSystem : ModSystem
 
                 if (_screenshotTimer is -1) {
                     _endPosition = Main.MouseScreen;
-                    _endPointWindow = NativeMethods.GetCursorPosition();
+                    _endPointWindow = WindowsMethods.GetCursorPosition();
                 }
 
                 if (_screenshotTimer > 0) {
@@ -93,7 +93,7 @@ public class BasicsSystem : ModSystem
                     if (size.Width <= 0 || size.Height <= 0) return true;
 
                     // 截屏
-                    var bm = NativeMethods.CaptureRectangleNative(new System.Drawing.Rectangle(leftTop, size));
+                    var bm = WindowsMethods.CaptureRectangleNative(new System.Drawing.Rectangle(leftTop, size));
 
                     // 发送截屏
                     if (!ImageChat.Config.ScreenshotToChat) return true;
