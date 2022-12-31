@@ -21,20 +21,16 @@ public class RemadeChatMonitorHooks : ModSystem
     private static Dictionary<string, FieldInfo> _msgContainerFields;
 
     private static void HandleClipboardImage() {
-        if (Main.inputText.IsKeyDown(Keys.LeftControl) || Main.inputText.IsKeyDown(Keys.RightControl)) {
-            if (Main.inputText.IsKeyDown(Keys.V) && !Main.oldInputText.IsKeyDown(Keys.V)) {
-                if (WindowsMethods.ClipboardTryGetBitmap(out var bitmap)) {
-                    var tex = ImageChat.Bitmap2Tex2D(bitmap);
+        if (!Main.inputText.IsKeyDown(Keys.LeftControl) && !Main.inputText.IsKeyDown(Keys.RightControl)) return;
+        if (!Main.inputText.IsKeyDown(Keys.V) || Main.oldInputText.IsKeyDown(Keys.V)) return;
+        if (!ClipboardController.TryGetTexture2D(out var tex)) return;
 
-                    if (!Utils.TryCreatingDirectory(ImageChat.FolderName))
-                        return;
+        if (!Utils.TryCreatingDirectory(ImageChat.FolderName))
+            return;
 
-                    string fileName = ImageChat.FolderName + DateTime.Now.ToFileTime() + ".png";
+        string fileName = ImageChat.FolderName + DateTime.Now.ToFileTime() + ".png";
 
-                    ImageChat.LocalSendImage(tex, fileName);
-                }
-            }
-        }
+        ImageChat.LocalSendImage(tex, fileName);
     }
 
     internal static void SendTexture(Texture2D tex, string filePath) {
@@ -83,14 +79,16 @@ public class RemadeChatMonitorHooks : ModSystem
                 _msgContainerFields["_parsedText"].GetValue(msgContainer) is not List<TextSnippet[]> {
                     Count: 1
                 } textSnippetsList || textSnippetsList[0].Length is not 1 ||
-                textSnippetsList[0][0] is not ImageSnippet) {
+                textSnippetsList[0][0] is not ImageSnippet imageSnippet) {
                 orig.Invoke(msgContainer);
                 return;
             }
 
+            // Refresh 恰恰是在分辨率改变时调用的，所以这里重设一下 Scale
+            imageSnippet.RecalculateScale();
             // 另开一个List，因为 textSnippetsList 是引用类型
             var savedList = new List<TextSnippet[]> {
-                new[] {textSnippetsList[0][0]}
+                new TextSnippet[] {imageSnippet}
             };
             orig.Invoke(msgContainer);
             _msgContainerFields["_parsedText"].SetValue(msgContainer, savedList);
@@ -115,6 +113,7 @@ public class RemadeChatMonitorHooks : ModSystem
             }
         }
 
+        float screenHeightRate = Main.screenHeight / 800f;
         int offsetY = 0;
         int line = 0;
         int? num6 = null;
@@ -149,7 +148,7 @@ public class RemadeChatMonitorHooks : ModSystem
             }
 
             // 防止刷屏 & 只绘制了一个图片的话不断掉(也就是不包括人名不断掉)
-            if (offsetY > 220 && !isImage) {
+            if (offsetY > 250 * screenHeightRate && !isImage) {
                 break;
             }
 

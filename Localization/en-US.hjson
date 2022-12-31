@@ -1,6 +1,9 @@
 Mods: {
 	ImageChat: {
 		Config: {
+		    ClientConfiguration: "Local Settings"
+		    ServerConfiguration: "Global Settings"
+		    
 			MaximumWidth: {
 				Label: "Maximum Image Width"
 				Tooltip: "Range: 5~2000"
@@ -28,6 +31,15 @@ Mods: {
 			ScreenshotToChat: {
 				Label: "Send Screenshots to Chat"
 				Tooltip: "Once enabled, in-game screenshots will be automatically sent to the chat"
+			}
+			Resize: {
+			    Label: "Image Sharpness"
+                Tooltip:
+                    '''
+                    Select the image sharpness percentage, 100% is lossless
+                    Lower resolution reduces the network bandwidth required for multiplayer transfers,
+                    but will reduce image quality
+                    '''
 			}
 		}
 		Common: {

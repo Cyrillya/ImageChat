@@ -1,4 +1,5 @@
 ﻿using ImageChat.Core.Osx;
+using ImageChat.Core.Windows;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.OS;
 
@@ -13,7 +14,7 @@ internal static class ClipboardController
             bool succeed = WindowsMethods.ClipboardTryGetBitmap(out var bitmap);
             if (!succeed) return false;
 
-            texture = ImageChat.Bitmap2Tex2D(bitmap);
+            texture = bitmap.ResizeImage().Bitmap2Tex2D();
             return true;
         }
 

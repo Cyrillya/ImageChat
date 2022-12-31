@@ -3,12 +3,21 @@ using Terraria.ModLoader.Config;
 
 namespace ImageChat.Contents;
 
-public class Configuration : ModConfig
+[Label("$Mods.ImageChat.Config.ServerConfiguration")]
+public class ServerConfiguration : ModConfig
 {
+    public enum ResizeLevel
+    {
+        [Label("100%")] Full,
+        [Label("75%")] ThreeQuarters,
+        [Label("50%")] Half,
+        [Label("25%")] Quarter
+    }
+    
     public override ConfigScope Mode => ConfigScope.ServerSide;
 
     public override void OnLoaded() {
-        ImageChat.Config = this;
+        ImageChat.ServerConfig = this;
     }
     
     [Label("$Mods.ImageChat.Config.MaximumWidth.Label")]
@@ -28,6 +37,22 @@ public class Configuration : ModConfig
     [DefaultValue(1)]
     [Range(1, 60)]
     public int SendCap;
+    
+    [Label("$Mods.ImageChat.Config.Resize.Label")]
+    [Tooltip("$Mods.ImageChat.Config.Resize.Tooltip")]
+    [DefaultValue(ResizeLevel.ThreeQuarters)]
+    [DrawTicks]
+    public ResizeLevel Resize;
+}
+
+[Label("$Mods.ImageChat.Config.ClientConfiguration")]
+public class ClientConfiguration : ModConfig
+{
+    public override ConfigScope Mode => ConfigScope.ClientSide;
+
+    public override void OnLoaded() {
+        ImageChat.ClientConfig = this;
+    }
 
     [Label("$Mods.ImageChat.Config.AutoClear.Label")]
     [Tooltip("$Mods.ImageChat.Config.AutoClear.Tooltip")]

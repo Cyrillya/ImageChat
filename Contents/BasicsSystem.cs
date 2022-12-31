@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using ImageChat.Core.Windows;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ModLoader;
@@ -96,9 +97,9 @@ public class BasicsSystem : ModSystem
                     var bm = WindowsMethods.CaptureRectangleNative(new System.Drawing.Rectangle(leftTop, size));
 
                     // 发送截屏
-                    if (!ImageChat.Config.ScreenshotToChat) return true;
+                    if (!ImageChat.ClientConfig.ScreenshotToChat) return true;
 
-                    var tex = ImageChat.Bitmap2Tex2D(bm);
+                    var tex = bm.ResizeImage().Bitmap2Tex2D();
                     if (!Utils.TryCreatingDirectory(ImageChat.FolderName)) return true;
 
                     ImageChat.LocalSendImage(tex, ImageChat.FolderName + DateTime.Now.ToFileTime() + ".png");

@@ -1,6 +1,9 @@
 ﻿Mods: {
 	ImageChat: {
 		Config: {
+		    ClientConfiguration: "个人配置"
+		    ServerConfiguration: "全局配置"
+		    
 			MaximumWidth: {
 				Label: "图像最大宽度"
 				Tooltip: "调节范围: 5~2000"
@@ -24,6 +27,14 @@
 			ScreenshotToChat: {
 				Label: "将截图发送到聊天"
 				Tooltip: "开启后，游戏内截图将自动发送到聊天"
+			}
+			Resize: {
+			    Label: "调整图像清晰度"
+                Tooltip:
+                    '''
+                    选择图像清晰度百分比，100%即无损
+                    较低的清晰度会降低多人模式下传输所需的网络带宽，但会降低图像质量
+                    '''
 			}
 		}
 		Common: {

@@ -1,6 +1,8 @@
 ﻿using ImageChat.Contents;
+using ImageChat.Core.Windows;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using Terraria;
@@ -42,7 +44,8 @@ public class ImageChatUI : UIState
                 Texture2D tex = null;
                 try {
                     var stream = File.OpenRead(path);
-                    tex = Texture2D.FromStream(Main.graphics.GraphicsDevice, stream);
+                    var bmp = new Bitmap(stream);
+                    tex = bmp.ResizeImage().Bitmap2Tex2D();
                 }
                 catch (Exception exception) {
                     FancyErrorPrinter.ShowFailedToLoadAssetError(exception, path);

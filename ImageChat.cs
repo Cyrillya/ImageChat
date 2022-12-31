@@ -17,7 +17,8 @@ public class ImageChat : Mod
     internal static string FolderName => Main.SavePath + Path.DirectorySeparatorChar + "Captures" +
                                          Path.DirectorySeparatorChar + "CachedImages" + Path.DirectorySeparatorChar;
 
-    internal static Configuration Config;
+    internal static ServerConfiguration ServerConfig;
+    internal static ClientConfiguration ClientConfig;
     internal static ImageChat Instance;
     internal static List<Color> CacheColors;
 
@@ -29,7 +30,7 @@ public class ImageChat : Mod
         Instance = this;
 
         // 自动清理缓存
-        if (!Config.AutoClear || !Directory.Exists(FolderName)) return;
+        if (!ClientConfig.AutoClear || !Directory.Exists(FolderName)) return;
 
         var folder = new DirectoryInfo(FolderName);
         // 获取文件夹下所有的文件
@@ -72,19 +73,20 @@ public class ImageChat : Mod
 
                 break;
             case 1: // 完成包
+                byte sender = reader.ReadByte();
+                ushort width = reader.ReadUInt16();
+                ushort height = reader.ReadUInt16();
+                string name = $"<{Main.player[sender].name}>";
                 if (Main.netMode is NetmodeID.Server) {
                     var p = GetPacket();
                     p.Write((byte) 1); // 包类型
-                    p.Write(reader.ReadString());
-                    p.Write(reader.ReadUInt16());
-                    p.Write(reader.ReadUInt16());
+                    p.Write(sender);
+                    p.Write(width);
+                    p.Write(height);
                     p.Send(ignoreClient: whoAmI);
+                    Console.WriteLine($"{name} [Image]");
                 }
                 else {
-                    string name = reader.ReadString();
-                    ushort width = reader.ReadUInt16();
-                    ushort height = reader.ReadUInt16();
-
                     if (!Utils.TryCreatingDirectory(FolderName))
                         break;
 
@@ -103,7 +105,7 @@ public class ImageChat : Mod
     }
 
     public void SendImagePacket(Texture2D tex) {
-        string name = $"<{Main.LocalPlayer.name}>";
+        // string name = $"<{Main.LocalPlayer.name}>";
         ushort width = (ushort) tex.Width;
         ushort height = (ushort) tex.Height;
         var colors = new Color[tex.Width * tex.Height];
@@ -131,7 +133,7 @@ public class ImageChat : Mod
 
         var finishPacket = GetPacket();
         finishPacket.Write((byte) 1); // 包类型
-        finishPacket.Write(name);
+        finishPacket.Write((byte) Main.LocalPlayer.whoAmI);
         finishPacket.Write(width);
         finishPacket.Write(height);
         finishPacket.Send();
@@ -144,14 +146,14 @@ public class ImageChat : Mod
             return;
         }
 
-        if (tex.Width > Config.MaximumWidth || tex.Height > Config.MaximumHeight) {
-            MessageBox.Show(Language.GetTextValue("Mods.ImageChat.Common.ImageTooLarge", Config.MaximumWidth,
-                Config.MaximumHeight), Language.GetTextValue("Mods.ImageChat.Common.Warn"));
+        if (tex.Width > ServerConfig.MaximumWidth || tex.Height > ServerConfig.MaximumHeight) {
+            MessageBox.Show(Language.GetTextValue("Mods.ImageChat.Common.ImageTooLarge", ServerConfig.MaximumWidth,
+                ServerConfig.MaximumHeight), Language.GetTextValue("Mods.ImageChat.Common.Warn"));
             return;
         }
 
         // 设置冷却
-        BasicsSystem.SendDelay = Config.SendCap;
+        BasicsSystem.SendDelay = ServerConfig.SendCap;
 
         // 发送图片
         Main.NewText($"<{Main.LocalPlayer.name}>");
@@ -161,11 +163,5 @@ public class ImageChat : Mod
         if (Main.netMode is NetmodeID.MultiplayerClient) {
             Instance.SendImagePacket(tex);
         }
-    }
-
-    public static Texture2D Bitmap2Tex2D(System.Drawing.Bitmap bm) {
-        using var s = new MemoryStream();
-        bm.Save(s, System.Drawing.Imaging.ImageFormat.Png);
-        return Texture2D.FromStream(Main.instance.GraphicsDevice, s);
     }
 }
