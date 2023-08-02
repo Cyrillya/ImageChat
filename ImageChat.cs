@@ -100,7 +100,6 @@ public class ImageChat : Mod
 
         // 发包
         var imageBytes = stream.ToArray();
-        Main.NewText(imageBytes.Length);
 
         const int batchSize = 50000;
         int totalBytes = imageBytes.Length;

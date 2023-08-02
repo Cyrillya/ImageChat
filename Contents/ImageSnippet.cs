@@ -3,11 +3,9 @@ using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Graphics;
 using System;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
-using System.Threading.Tasks;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.Localization;
 using Terraria.UI.Chat;
 using Color = Microsoft.Xna.Framework.Color;
@@ -70,12 +68,18 @@ public class ImageSnippet : TextSnippet
     public override bool UniqueDraw(bool justCheckingString, out Vector2 size, SpriteBatch spriteBatch,
         Vector2 position = default, Color color = default, float scale = 1f) {
         if (!justCheckingString && color != Color.Black) {
+            var boundingBox = new Rectangle((int)position.X, (int)position.Y, (int)(Texture.Width * scale), (int)(Texture.Height * scale));
+            boundingBox.Width += 4;
+            boundingBox.Height += 4;
+            spriteBatch.Draw(TextureAssets.BlackTile.Value, boundingBox, Color.Black * 0.5f);
+            
+            position += new Vector2(2f);
             spriteBatch.Draw(Texture, position, null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
         }
 
-        size = Texture.Size() * scale; // 这里拿来作间隔的，GetStringLength不知道拿来干啥的反正绘制没用
+        size = Texture.Size() * scale + new Vector2(6f); // 这里拿来作间隔的，GetStringLength不知道拿来干啥的反正绘制没用
         return true;
     }
 
-    public override float GetStringLength(DynamicSpriteFont font) => Texture.Width * Scale;
+    public override float GetStringLength(DynamicSpriteFont font) => Texture.Width * Scale + 6f;
 }

@@ -10,25 +10,6 @@ Configuration: {
 		Label: 发送冷却
 		Tooltip: 在每次发送后必须等待多少秒才能再次发送图像
 	}
-
-	Lossless: {
-		Label: 无损
-		Tooltip:
-			'''
-			图片是否会被无损发送
-			影响剪切板与游戏内截图发送的图片
-			'''
-	}
-
-	ImageQuality: {
-		Label: 图像质量
-		Tooltip:
-			'''
-			如果禁用无损，此项将决定图像质量
-			数值越大，图像质量越好，但文件大小也越大
-			影响剪切板与游戏内截图发送的图像
-			'''
-	}
 }
 
 ClientConfig: {

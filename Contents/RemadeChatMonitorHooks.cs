@@ -133,7 +133,7 @@ public class RemadeChatMonitorHooks : ModSystem
 
             if (isImage) {
                 var imageSnippet = snippetWithInversedIndex[0] as ImageSnippet;
-                offsetY += (int) (imageSnippet!.Texture.Height * imageSnippet.Scale);
+                offsetY += (int) (imageSnippet!.Texture.Height * imageSnippet.Scale) + 6;
             }
             else {
                 offsetY += 21;

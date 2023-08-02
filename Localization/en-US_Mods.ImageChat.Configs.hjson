@@ -14,25 +14,6 @@ Configuration: {
 			send before sending the image again
 			'''
 	}
-
-	Lossless: {
-		Label: Lossless
-		Tooltip:
-			'''
-			Whether the image will be sent losslessly
-			Affects the clipboard images and images sent by in-game screenshots
-			'''
-	}
-
-	ImageQuality: {
-		Label: Image Quality
-		Tooltip:
-			'''
-			If lossless is disabled, this will determine the image quality
-			The larger the value, the better the image quality, but the larger the file size
-			Affects the clipboard images and images sent by in-game screenshots
-			'''
-	}
 }
 
 ClientConfig: {
