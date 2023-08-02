@@ -1,0 +1,6 @@
+ImageTooLarge: Please select an image file with a size below {0}MB
+OpenImage: Open image
+SelectImage: Select image
+Warn: Warning
+Wait: You must wait {0} seconds to send the image
+Keybinds.ScreenCapture.DisplayName: Screen Capture

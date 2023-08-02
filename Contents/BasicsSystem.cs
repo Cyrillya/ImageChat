@@ -3,6 +3,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
+using System.IO;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ModLoader;
@@ -24,7 +26,7 @@ public class BasicsSystem : ModSystem
     internal static BasicsSystem Instance;
 
     public override void Load() {
-        ScrnshotKeybind = KeybindLoader.RegisterKeybind(Mod, "Screen Capture", "OemPipe");
+        ScrnshotKeybind = KeybindLoader.RegisterKeybind(Mod, "ScreenCapture", "OemPipe");
         Instance = this;
     }
 
@@ -96,12 +98,17 @@ public class BasicsSystem : ModSystem
                     var bm = NativeMethods.CaptureRectangleNative(new System.Drawing.Rectangle(leftTop, size));
 
                     // 发送截屏
-                    if (!ImageChat.Config.ScreenshotToChat) return true;
+                    if (!ImageChat.ClientConfig.ScreenshotToChat) return true;
+                    
+                    using var s = bm.SaveToStream();
+                    var path = ImageChat.FolderName + DateTime.Now.ToFileTime() + ".png";
+                    
+                    if (!Utils.TryCreatingDirectory(ImageChat.FolderName)) {
+                        s.Close();
+                        return true;
+                    }
 
-                    var tex = ImageChat.Bitmap2Tex2D(bm);
-                    if (!Utils.TryCreatingDirectory(ImageChat.FolderName)) return true;
-
-                    ImageChat.LocalSendImage(tex, ImageChat.FolderName + DateTime.Now.ToFileTime() + ".png");
+                    ImageChat.LocalSendImage(s, path);
                     return true;
                 }
 
@@ -116,49 +123,12 @@ public class BasicsSystem : ModSystem
                 int height = (int) (Math.Max(_startPosition.Y, _endPosition.Y) - leftTopDrawing.Y);
 
                 var color = Color.GreenYellow;
-                DrawBorder(new Vector2(leftTopDrawing.X, leftTopDrawing.Y), width, height, color * 0.35f, color);
+                ModUtilities.DrawBorder(new Vector2(leftTopDrawing.X, leftTopDrawing.Y), width, height, color * 0.35f, color);
 
                 return true;
             },
             InterfaceScaleType.UI)
         );
-    }
-
-    public static void DrawBorder(Vector2 position, float width, float height, Color backgroundColor,
-        Color borderColor) {
-        Texture2D texture = TextureAssets.MagicPixel.Value;
-        Vector2 scale = new(width, height);
-        Main.spriteBatch.Draw(
-            texture,
-            position,
-            new Rectangle(0, 0, 1, 1),
-            backgroundColor,
-            0f,
-            Vector2.Zero,
-            scale,
-            SpriteEffects.None, 0f);
-        Main.spriteBatch.Draw(
-            texture,
-            position + Vector2.UnitX * -2f + Vector2.UnitY * -2f,
-            new Rectangle(0, 0, 1, 1),
-            borderColor, 0f, Vector2.Zero,
-            new Vector2(2f, scale.Y + 4),
-            SpriteEffects.None, 0f);
-        Main.spriteBatch.Draw(texture,
-            position + Vector2.UnitX * scale.X + Vector2.UnitY * -2f,
-            new Rectangle(0, 0, 1, 1),
-            borderColor, 0f, Vector2.Zero,
-            new Vector2(2f, scale.Y + 4), SpriteEffects.None, 0f);
-        Main.spriteBatch.Draw(texture,
-            position + Vector2.UnitY * -2f,
-            new Rectangle(0, 0, 1, 1),
-            borderColor, 0f, Vector2.Zero,
-            new Vector2(scale.X, 2f), SpriteEffects.None, 0f);
-        Main.spriteBatch.Draw(texture,
-            position + Vector2.UnitY * scale.Y,
-            new Rectangle(0, 0, 1, 1),
-            borderColor, 0f, Vector2.Zero,
-            new Vector2(scale.X, 2f), SpriteEffects.None, 0f);
     }
 
     #endregion

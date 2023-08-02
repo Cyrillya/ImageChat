@@ -1,0 +1,56 @@
+Configuration: {
+	DisplayName: 模组配置(服务器)
+
+	MaximumFileSize: {
+		Label: 图像文件大小 (MB)
+		Tooltip: 调节范围: 0.5MB ~ 10MB
+	}
+
+	SendCap: {
+		Label: 发送冷却
+		Tooltip: 在每次发送后必须等待多少秒才能再次发送图像
+	}
+
+	Lossless: {
+		Label: 无损
+		Tooltip:
+			'''
+			图片是否会被无损发送
+			影响剪切板与游戏内截图发送的图片
+			'''
+	}
+
+	ImageQuality: {
+		Label: 图像质量
+		Tooltip:
+			'''
+			如果禁用无损，此项将决定图像质量
+			数值越大，图像质量越好，但文件大小也越大
+			影响剪切板与游戏内截图发送的图像
+			'''
+	}
+}
+
+ClientConfig: {
+	DisplayName: 模组配置(客户端)
+
+	WindowWarning: {
+		Label: 弹窗警告
+		Tooltip: 开启后，图像发送失败时，将使用弹窗警告进行提醒，而非在聊天栏弹出警告
+	}
+
+	AutoClear: {
+		Label: 自动清理缓存
+		Tooltip: 每次加载模组时自动清理 Captures/CachedImages/ 下的图像文件
+	}
+
+	ScreenshotClipboard: {
+		Label: 将截图复制到剪贴板
+		Tooltip: 开启后，游戏内截图将自动复制到剪贴板
+	}
+
+	ScreenshotToChat: {
+		Label: 将截图发送到聊天
+		Tooltip: 开启后，游戏内截图将自动发送到聊天
+	}
+}

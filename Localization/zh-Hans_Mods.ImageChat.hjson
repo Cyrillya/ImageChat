@@ -1,0 +1,6 @@
+ImageTooLarge: 请选择大小低于{0}MB的图像文件
+OpenImage: 打开图片
+SelectImage: 选择图片
+Warn: 警告
+Wait: 你必须等待{0}秒才能发送图像
+Keybinds.ScreenCapture.DisplayName: 屏幕截图

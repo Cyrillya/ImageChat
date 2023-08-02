@@ -3,6 +3,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Reflection;
 using Terraria;
 using Terraria.GameContent;
@@ -10,8 +12,6 @@ using Terraria.GameContent.UI.Chat;
 using Terraria.ModLoader;
 using Terraria.UI.Chat;
 using Keys = Microsoft.Xna.Framework.Input.Keys;
-using OnChat = On.Terraria.GameContent.UI.Chat.RemadeChatMonitor;
-using OnContainer = On.Terraria.UI.Chat.ChatMessageContainer;
 
 namespace ImageChat.Contents;
 
@@ -21,23 +21,23 @@ public class RemadeChatMonitorHooks : ModSystem
     private static Dictionary<string, FieldInfo> _msgContainerFields;
 
     private static void HandleClipboardImage() {
-        if (Main.inputText.IsKeyDown(Keys.LeftControl) || Main.inputText.IsKeyDown(Keys.RightControl)) {
-            if (Main.inputText.IsKeyDown(Keys.V) && !Main.oldInputText.IsKeyDown(Keys.V)) {
-                if (NativeMethods.ClipboardTryGetBitmap(out var bitmap)) {
-                    var tex = ImageChat.Bitmap2Tex2D(bitmap);
+        if (!Main.inputText.IsKeyDown(Keys.LeftControl) && !Main.inputText.IsKeyDown(Keys.RightControl)) return;
+        if (!Main.inputText.IsKeyDown(Keys.V) || Main.oldInputText.IsKeyDown(Keys.V)) return;
+        if (!NativeMethods.ClipboardTryGetBitmap(out var bitmap)) return;
 
-                    if (!Utils.TryCreatingDirectory(ImageChat.FolderName))
-                        return;
+        using var s = bitmap.SaveToStream();
 
-                    string fileName = ImageChat.FolderName + DateTime.Now.ToFileTime() + ".png";
-
-                    ImageChat.LocalSendImage(tex, fileName);
-                }
-            }
+        if (!Utils.TryCreatingDirectory(ImageChat.FolderName)) {
+            s.Close();
+            return;
         }
+
+        string fileName = ImageChat.FolderName + DateTime.Now.ToFileTime() + ".png";
+
+        ImageChat.LocalSendImage(s, fileName);
     }
 
-    internal static void SendTexture(Texture2D tex, string filePath) {
+    internal static void PostToChat(MemoryStream stream, string filePath) {
         var msgContainer = new ChatMessageContainer();
         msgContainer.SetContents(" ", Color.White, -1);
 
@@ -47,7 +47,7 @@ public class RemadeChatMonitorHooks : ModSystem
         }
 
         textSnippetsList = new List<TextSnippet[]> {
-            new TextSnippet[] {new ImageSnippet(tex, filePath)}
+            new TextSnippet[] {new ImageSnippet(stream, filePath)}
         };
         _msgContainerFields["_parsedText"].SetValue(msgContainer, textSnippetsList);
 
@@ -75,10 +75,10 @@ public class RemadeChatMonitorHooks : ModSystem
         }
 
         // 聊天框绘制
-        OnChat.DrawChat += HookDrawChat;
+        On_RemadeChatMonitor.DrawChat += HookDrawChat;
 
         // 刷新时不应把存好的 ImageSnippet 刷新掉
-        OnContainer.Refresh += (orig, msgContainer) => {
+        On_ChatMessageContainer.Refresh += (orig, msgContainer) => {
             if (msgContainer.Prepared ||
                 _msgContainerFields["_parsedText"].GetValue(msgContainer) is not List<TextSnippet[]> {
                     Count: 1
@@ -97,15 +97,16 @@ public class RemadeChatMonitorHooks : ModSystem
         };
     }
 
-    private static void HookDrawChat(OnChat.orig_DrawChat orig, RemadeChatMonitor self, bool drawingPlayerChat) {
+    private static void HookDrawChat(On_RemadeChatMonitor.orig_DrawChat orig, RemadeChatMonitor self,
+        bool drawingPlayerChat) {
         // orig.Invoke(self, drawingPlayerChat);
-        int showCount = (int) _fields["_showCount"].GetValue(self);
-        int startChatLine = (int) _fields["_startChatLine"].GetValue(self);
+        int showCount = (int) _fields["_showCount"].GetValue(self)!;
+        int startChatLine = (int) _fields["_startChatLine"].GetValue(self)!;
         var messages = _fields["_messages"].GetValue(Main.chatMonitor) as List<ChatMessageContainer>;
 
         int num2 = 0;
         int num3 = 0;
-        while (startChatLine > 0 && num2 < messages.Count) {
+        while (startChatLine > 0 && num2 < messages!.Count) {
             int num4 = Math.Min(startChatLine, messages[num2].LineCount);
             startChatLine -= num4;
             num3 += num4;
@@ -132,7 +133,7 @@ public class RemadeChatMonitorHooks : ModSystem
 
             if (isImage) {
                 var imageSnippet = snippetWithInversedIndex[0] as ImageSnippet;
-                offsetY += (int) (imageSnippet.Texture.Height * imageSnippet.Scale);
+                offsetY += (int) (imageSnippet!.Texture.Height * imageSnippet.Scale);
             }
             else {
                 offsetY += 21;

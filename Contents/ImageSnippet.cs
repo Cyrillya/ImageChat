@@ -3,24 +3,28 @@ using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Graphics;
 using System;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
+using System.Threading.Tasks;
 using Terraria;
 using Terraria.Localization;
 using Terraria.UI.Chat;
+using Color = Microsoft.Xna.Framework.Color;
 
 namespace ImageChat.Contents;
 
 public class ImageSnippet : TextSnippet
 {
-    public Texture2D Texture;
-    public readonly string ImagePath;
+    public readonly Texture2D Texture;
+    private readonly string _imagePath;
 
-    public ImageSnippet(Texture2D texture, string imagePath) {
-        Texture = texture;
-        ImagePath = imagePath;
+    public ImageSnippet(Stream imageStream, string imagePath) {
+        Texture = Texture2D.FromStream(Main.graphics.GraphicsDevice, imageStream);
+        _imagePath = imagePath;
         Scale = 1f;
 
-        float availableWidth = 100;
+        float availableWidth = 270;
         int width = Texture.Width;
         int height = Texture.Height;
         if (width > availableWidth || height > availableWidth) {
@@ -36,21 +40,22 @@ public class ImageSnippet : TextSnippet
     public override void OnHover() {
         if (!Main.drawingPlayerChat) return;
 
-        string open = Language.GetTextValue("Mods.ImageChat.Common.OpenImage");
+        string open = Language.GetTextValue("Mods.ImageChat.OpenImage");
         Main.instance.MouseText($"{open}");
+        Main.LocalPlayer.mouseInterface = true;
     }
 
     public override void OnClick() {
         if (!Main.drawingPlayerChat) return;
 
         try {
-            if (!File.Exists(ImagePath)) {
-                using var stream = File.Create(ImagePath);
+            if (!File.Exists(_imagePath)) {
+                using var stream = File.Create(_imagePath);
                 Texture.SaveAsPng(stream, Texture.Width, Texture.Height);
             }
 
             var process = new Process();
-            process.StartInfo.FileName = ImagePath;
+            process.StartInfo.FileName = _imagePath;
             process.StartInfo.Arguments = "rundl132.exe C://WINDOWS//system32//shimgvw.dll";
             process.StartInfo.UseShellExecute = true;
             process.Start();

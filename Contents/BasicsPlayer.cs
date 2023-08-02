@@ -6,7 +6,7 @@ namespace ImageChat.Contents;
 
 public class BasicsPlayer : ModPlayer
 {
-    public override void OnEnterWorld(Player player) {
+    public override void OnEnterWorld() {
         BasicsSystem.Instance.OnEnterWorld();
     }
 

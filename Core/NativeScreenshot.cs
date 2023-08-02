@@ -67,7 +67,7 @@ internal partial class NativeMethods
         BitBlt(hdcDest, 0, 0, rect.Width, rect.Height, hdcSrc, rect.X, rect.Y,
             CopyPixelOperation.SourceCopy | CopyPixelOperation.CaptureBlt);
 
-        if (ImageChat.Config.ScreenshotClipboard) {
+        if (ImageChat.ClientConfig.ScreenshotClipboard) {
             SetClipboardBitmap(hBitmap);
         }
 

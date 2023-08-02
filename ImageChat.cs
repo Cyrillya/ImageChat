@@ -1,14 +1,19 @@
 using ImageChat.Contents;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using ImageChat.Core;
 using Terraria;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
 
 namespace ImageChat;
 
@@ -18,151 +23,143 @@ public class ImageChat : Mod
                                          Path.DirectorySeparatorChar + "CachedImages" + Path.DirectorySeparatorChar;
 
     internal static Configuration Config;
+    internal static ClientConfig ClientConfig;
     internal static ImageChat Instance;
-    internal static List<Color> CacheColors;
+    internal static List<byte> CachedData;
 
     public override void Load() {
-        CacheColors = new List<Color>();
+        CachedData = new List<byte>();
         Instance = this;
 
-        // ×Ô¶¯ÇåÀí»º´æ
-        if (!Config.AutoClear || !Directory.Exists(FolderName)) return;
+        // è‡ªåŠ¨æ¸…ç†ç¼“å­˜
+        if (!ClientConfig.AutoClear || !Directory.Exists(FolderName)) return;
 
         var folder = new DirectoryInfo(FolderName);
-        // »ñÈ¡ÎÄ¼ş¼ĞÏÂËùÓĞµÄÎÄ¼ş
+        // è·å–æ–‡ä»¶å¤¹ä¸‹æ‰€æœ‰çš„æ–‡ä»¶
         var fileList = folder.GetFiles();
         foreach (var file in fileList) {
-            // ÅĞ¶ÏÎÄ¼şµÄÀ©Õ¹ÃûÊÇ·ñÎª .png
-            if (file.Extension == ".png") {
-                file.Delete(); // É¾³ı
+            // åˆ¤æ–­æ–‡ä»¶çš„æ‰©å±•åæ˜¯å¦ä¸º .png æˆ– .jpeg
+            if (file.Extension is ".png" or ".jpeg") {
+                file.Delete(); // åˆ é™¤
             }
         }
     }
 
     public override void Unload() {
-        CacheColors = null;
+        CachedData = null;
         Instance = null;
     }
 
     public override void HandlePacket(BinaryReader reader, int whoAmI) {
         switch (reader.ReadByte()) {
-            case 0: // ´«ÊäÖĞ
+            case 0: // ä¼ è¾“ä¸­
                 if (Main.netMode is NetmodeID.Server) {
                     var p = GetPacket();
                     ushort length = reader.ReadUInt16();
+                    var data = reader.ReadBytes(length);
                     p.Write((byte) 0);
                     p.Write(length);
-                    for (int i = 0; i < length; i++) {
-                        p.Write(reader.ReadUInt32());
-                    }
-
+                    p.Write(data);
                     p.Send(ignoreClient: whoAmI);
                 }
                 else {
                     ushort length = reader.ReadUInt16();
-                    for (int i = 0; i < length; i++) {
-                        CacheColors.Add(new Color {
-                            PackedValue = reader.ReadUInt32()
-                        });
-                    }
+                    var data = reader.ReadBytes(length);
+                    CachedData.AddRange(data);
                 }
 
                 break;
-            case 1: // Íê³É°ü
+            case 1: // å®ŒæˆåŒ…
                 if (Main.netMode is NetmodeID.Server) {
                     var p = GetPacket();
-                    p.Write((byte) 1); // °üÀàĞÍ
+                    p.Write((byte) 1); // åŒ…ç±»å‹
                     p.Write(reader.ReadString());
-                    p.Write(reader.ReadUInt16());
-                    p.Write(reader.ReadUInt16());
                     p.Send(ignoreClient: whoAmI);
                 }
                 else {
                     string name = reader.ReadString();
-                    ushort width = reader.ReadUInt16();
-                    ushort height = reader.ReadUInt16();
 
                     if (!Utils.TryCreatingDirectory(FolderName))
                         break;
 
-                    var tex = new Texture2D(Main.graphics.GraphicsDevice, width, height);
-                    tex.SetData(0, new Rectangle(0, 0, width, height), CacheColors.ToArray(), 0, width * height);
+                    using var stream = CachedData.ToArray().ToMemoryStream();
 
                     Main.NewText(name);
 
                     string fileName = FolderName + DateTime.Now.ToFileTime() + ".png";
-                    RemadeChatMonitorHooks.SendTexture(tex, fileName);
-                    CacheColors.Clear();
+                    RemadeChatMonitorHooks.PostToChat(stream, fileName);
+                    CachedData.Clear();
                 }
 
                 break;
         }
     }
 
-    public void SendImagePacket(Texture2D tex) {
+    public void SendImagePacket(MemoryStream stream) {
         string name = $"<{Main.LocalPlayer.name}>";
-        ushort width = (ushort) tex.Width;
-        ushort height = (ushort) tex.Height;
-        var colors = new Color[tex.Width * tex.Height];
 
-        tex.GetData(0, new Rectangle(0, 0, width, height), colors, 0, width * height);
+        // å‘åŒ…
+        var imageBytes = stream.ToArray();
+        Main.NewText(imageBytes.Length);
 
-        int i = 0;
+        const int batchSize = 50000;
+        int totalBytes = imageBytes.Length;
+        int startIndex = 0;
 
-        while (true) {
-            int end = Math.Min(i + 10000, colors.Length); // ·¢ËÍ[i,end)Ë÷ÒıÄÚµÄËùÓĞColor
+        while (startIndex < totalBytes) {
+            int endIndex = Math.Min(startIndex + batchSize, totalBytes); // å‘é€[startIndex, endIndex)ç´¢å¼•å†…çš„æ‰€æœ‰byte
+            var data = imageBytes[startIndex..endIndex];
 
             var p = GetPacket();
-            p.Write((byte) 0); // °üÀàĞÍ
-            p.Write((ushort) (end - i)); // ·¢ËÍµÄColorÊıÁ¿
-            for (; i < end; i++) {
-                p.Write(colors[i].PackedValue); // ·¢ËÍËùÓĞÑÕÉ«
-            }
-
+            p.Write((byte) 0); // åŒ…ç±»å‹
+            p.Write((ushort) data.Length); // byteæ•°ç»„é•¿åº¦
+            p.Write(data); // æ•°æ®
             p.Send();
 
-            if (end == colors.Length) {
-                break;
-            }
+            startIndex = endIndex;
         }
 
         var finishPacket = GetPacket();
-        finishPacket.Write((byte) 1); // °üÀàĞÍ
+        finishPacket.Write((byte) 1); // åŒ…ç±»å‹
         finishPacket.Write(name);
-        finishPacket.Write(width);
-        finishPacket.Write(height);
         finishPacket.Send();
     }
 
-    public static void LocalSendImage(Texture2D tex, string path) {
+    public static void LocalSendImage(MemoryStream imageStream, string path) {
+        if (imageStream.Length > Config.MaximumFileSize * 1024 * 1024) {
+            string warning = Language.GetTextValue("Mods.ImageChat.ImageTooLarge", Config.MaximumFileSize);
+            if (ClientConfig.WindowWarning) {
+                MessageBox.Show(warning, Language.GetTextValue("Mods.ImageChat.Warn"));
+            }
+            else {
+                Main.NewText(warning, G: 50, B: 50);
+            }
+
+            return;
+        }
+
         if (BasicsSystem.SendDelay > 0) {
-            MessageBox.Show(Language.GetTextValue("Mods.ImageChat.Common.Wait", BasicsSystem.SendDelay.ToString("F1")),
-                Language.GetTextValue("Mods.ImageChat.Common.Warn"));
+            string warning = Language.GetTextValue("Mods.ImageChat.Wait", BasicsSystem.SendDelay.ToString("F1"));
+            if (ClientConfig.WindowWarning) {
+                MessageBox.Show(warning, Language.GetTextValue("Mods.ImageChat.Warn"));
+            }
+            else {
+                Main.NewText(warning, G: 50, B: 50);
+            }
+
             return;
         }
 
-        if (tex.Width > Config.MaximumWidth || tex.Height > Config.MaximumHeight) {
-            MessageBox.Show(Language.GetTextValue("Mods.ImageChat.Common.ImageTooLarge", Config.MaximumWidth,
-                Config.MaximumHeight), Language.GetTextValue("Mods.ImageChat.Common.Warn"));
-            return;
-        }
-
-        // ÉèÖÃÀäÈ´
+        // è®¾ç½®å†·å´
         BasicsSystem.SendDelay = Config.SendCap;
 
-        // ·¢ËÍÍ¼Æ¬
+        // å‘é€å›¾ç‰‡
         Main.NewText($"<{Main.LocalPlayer.name}>");
-        RemadeChatMonitorHooks.SendTexture(tex, path);
+        RemadeChatMonitorHooks.PostToChat(imageStream, path);
 
-        // ¶àÈË·¢°ü
+        // å¤šäººå‘åŒ…
         if (Main.netMode is NetmodeID.MultiplayerClient) {
-            Instance.SendImagePacket(tex);
+            Instance.SendImagePacket(imageStream);
         }
-    }
-
-    public static Texture2D Bitmap2Tex2D(System.Drawing.Bitmap bm) {
-        using var s = new MemoryStream();
-        bm.Save(s, System.Drawing.Imaging.ImageFormat.Png);
-        return Texture2D.FromStream(Main.instance.GraphicsDevice, s);
     }
 }

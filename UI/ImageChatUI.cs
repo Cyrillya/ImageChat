@@ -23,10 +23,10 @@ public class ImageChatUI : UIState
                 Top = new StyleDimension(-37, 1),
                 Left = new StyleDimension(x, 1),
             };
-        imageButton.OnClick += delegate {
+        imageButton.OnLeftClick += delegate {
             if (BasicsSystem.SendDelay > 0) {
-                MessageBox.Show(Language.GetTextValue("Mods.ImageChat.Common.Wait", BasicsSystem.SendDelay.ToString("F1")),
-                    Language.GetTextValue("Mods.ImageChat.Common.Warn"));
+                MessageBox.Show(Language.GetTextValue("Mods.ImageChat.Wait", BasicsSystem.SendDelay.ToString("F1")),
+                    Language.GetTextValue("Mods.ImageChat.Warn"));
                 return;
             }
 
@@ -37,27 +37,24 @@ public class ImageChatUI : UIState
             };
 
             string path =
-                FileBrowser.OpenFilePanel(Language.GetTextValue("Mods.ImageChat.Common.SelectImage"), extensions);
-            if (path != null) {
-                Texture2D tex = null;
-                try {
-                    var stream = File.OpenRead(path);
-                    tex = Texture2D.FromStream(Main.graphics.GraphicsDevice, stream);
-                }
-                catch (Exception exception) {
-                    FancyErrorPrinter.ShowFailedToLoadAssetError(exception, path);
-                }
+                FileBrowser.OpenFilePanel(Language.GetTextValue("Mods.ImageChat.SelectImage"), extensions);
+            if (path == null) return;
 
-                if (tex is null) return;
+            try {
+                byte[] data = File.ReadAllBytes(path);
+                using var stream = new MemoryStream(data);
 
-                ImageChat.LocalSendImage(tex, path);
+                ImageChat.LocalSendImage(stream, path);
+            }
+            catch (Exception exception) {
+                FancyErrorPrinter.ShowFailedToLoadAssetError(exception, path);
             }
         };
         imageButton.OnUpdate += element => {
             if (!element.IsMouseHovering) return;
 
             Main.LocalPlayer.mouseInterface = true;
-            Main.instance.MouseText(Language.GetTextValue("Mods.ImageChat.Common.SelectImage"));
+            Main.instance.MouseText(Language.GetTextValue("Mods.ImageChat.SelectImage"));
         };
         Append(imageButton);
     }

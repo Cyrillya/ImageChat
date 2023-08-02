@@ -1,0 +1,60 @@
+Configuration: {
+	DisplayName: Configuration (Sever)
+
+	MaximumFileSize: {
+		Label: Maximum File Size (MB)
+		Tooltip: Range: 0.5MB ~ 10MB
+	}
+
+	SendCap: {
+		Label: Sending Cooldown
+		Tooltip:
+			'''
+			This determines how many seconds you must wait after each
+			send before sending the image again
+			'''
+	}
+
+	Lossless: {
+		Label: Lossless
+		Tooltip:
+			'''
+			Whether the image will be sent losslessly
+			Affects the clipboard images and images sent by in-game screenshots
+			'''
+	}
+
+	ImageQuality: {
+		Label: Image Quality
+		Tooltip:
+			'''
+			If lossless is disabled, this will determine the image quality
+			The larger the value, the better the image quality, but the larger the file size
+			Affects the clipboard images and images sent by in-game screenshots
+			'''
+	}
+}
+
+ClientConfig: {
+	DisplayName: Configuration (Client)
+
+	WindowWarning: {
+		Label: Windowed Warning
+		Tooltip: If on, when an image fails to send, a popup warning will be used instead of warning in chat
+	}
+
+	AutoClear: {
+		Label: Automatic Cache Cleanup
+		Tooltip: Automatically clean up the image files under Captures/CachedImages/ each time the mod is loaded
+	}
+
+	ScreenshotClipboard: {
+		Label: Copy the Screenshot to the Clipboard
+		Tooltip: Once enabled, in-game screenshots will be automatically copied to the clipboard
+	}
+
+	ScreenshotToChat: {
+		Label: Send Screenshots to Chat
+		Tooltip: Once enabled, in-game screenshots will be automatically sent to the chat
+	}
+}
